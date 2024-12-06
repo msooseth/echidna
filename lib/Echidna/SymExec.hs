@@ -77,7 +77,7 @@ exploreContract conf contract tx vm = do
   doneChan <- newEmptyMVar
   resultChan <- newEmptyMVar
 
-  flip runReaderT defaultEnv $ withSolvers Z3 (fromIntegral conf.campaignConf.symExecNSolvers) timeout $ \solvers -> do
+  flip runReaderT defaultEnv $ withSolvers Z3 (fromIntegral conf.campaignConf.symExecNSolvers) 1 timeout $ \solvers -> do
     threadId <- liftIO $ forkIO $ flip runReaderT defaultEnv $ do
       res <- forM methods $ \method -> do
         let
@@ -97,7 +97,7 @@ exploreContract conf contract tx vm = do
         -- TODO we might want to switch vm's state.baseState value to to AbstractBase eventually.
         -- Doing so might mess up concolic execution.
         exprInter <- interpret fetcher maxIters askSmtIters Naive vm' runExpr
-        models <- liftIO $ mapConcurrently (checkSat solvers) $ manipulateExprInter isConc exprInter
+        models <- liftIO $ mapConcurrently (checkSat solvers) $ map Right $ manipulateExprInter isConc exprInter
         pure $ mapMaybe (modelToTx dst method conf.solConf.sender defaultSender) models
       liftIO $ putMVar resultChan $ concat res
       liftIO $ putMVar doneChan ()
@@ -107,9 +107,13 @@ exploreContract conf contract tx vm = do
   threadId <- takeMVar threadIdChan
   pure (threadId, resultChan)
 
+getRight :: Either a b -> b
+getRight (Right b) = b
+getRight _ = error "getRight: Left"
+
 -- | Turn the expression returned by `interpret` into into SMT2 values to feed into the solver
 manipulateExprInter :: Bool -> Expr End -> [SMT2]
-manipulateExprInter isConc = map (assertProps defaultConfig) . middleStep . map (extractProps . simplify) . flattenExpr . simplify where
+manipulateExprInter isConc = map (getRight . (assertProps defaultConfig)) . middleStep . map (extractProps . simplify) . flattenExpr . simplify where
   middleStep = if isConc then middleStepConc else id
   middleStepConc = map singleton . concatMap (go (PBool True))
   go :: Prop -> [Prop] -> [Prop]

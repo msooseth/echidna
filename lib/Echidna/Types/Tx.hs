@@ -212,11 +212,11 @@ isUselessNoCall tx = tx.call == NoCall && tx.delay == (0, 0)
 catNoCalls :: [Tx] -> [Tx]
 catNoCalls [] = []
 catNoCalls [tx] = [tx]
-catNoCalls (tx1:tx2:xs) = 
-    case (tx1.call, tx2.call) of 
+catNoCalls (tx1:tx2:xs) =
+    case (tx1.call, tx2.call) of
       (NoCall, NoCall) -> catNoCalls (nc:xs)
       _                -> tx1 : catNoCalls (tx2:xs)
-  where nc = tx1 { delay = (fst tx1.delay + fst tx2.delay, snd tx1.delay + snd tx2.delay) }  
+  where nc = tx1 { delay = (fst tx1.delay + fst tx2.delay, snd tx1.delay + snd tx2.delay) }
 
 -- | Transform a VMResult into a more hash-friendly sum type
 getResult :: VMResult Concrete s -> TxResult
@@ -234,7 +234,7 @@ getResult = \case
   VMFailure BadJumpDestination            -> ErrorBadJumpDestination
   VMFailure (Revert _)                    -> ErrorRevert
   VMFailure (OutOfGas _ _)                -> ErrorOutOfGas
-  VMFailure (BadCheatCode _)              -> ErrorBadCheatCode
+  VMFailure (BadCheatCode _ _)            -> ErrorBadCheatCode
   VMFailure StackLimitExceeded            -> ErrorStackLimitExceeded
   VMFailure IllegalOverflow               -> ErrorIllegalOverflow
   VMFailure StateChangeWhileStatic        -> ErrorStateChangeWhileStatic

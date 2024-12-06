@@ -52,8 +52,8 @@
         hevm = pkgs: pkgs.lib.pipe ((hsPkgs pkgs).callCabal2nix "hevm" (pkgs.fetchFromGitHub {
           owner = "ethereum";
           repo = "hevm";
-          rev = "f1f45d3c0d9767a38df04f398d1eab8b66dbe7fc";
-          sha256 = "sha256-3zEUwcZm4uZZLecvFTgVTV5CAm4qMfKPbLdwO88LnrY=";
+          rev = "6d61bb6a2d7274961146778946727f1f072f7541";
+          sha256 = "sha256-w3GWLySZb6fTMBumg3vHKtWs1Tzx+NI0j6Q89Rnyf4w=";
         }) { secp256k1 = pkgs.secp256k1; })
         ([
           pkgs.haskell.lib.compose.dontCheck
